@@ -151,6 +151,10 @@ The `SkillManager` will automatically discover the DLL, output registration deta
 
 ---
 
+## ToDo
+I plan on adding a /rpghelp command, that explains what the skill does, of which the skill developer must state when developing the skill
+Maybe even extend so you do /rpghelp Speed (for the speed skill) so it only shows that specific skill help text.
+
 ## License
 
 This project is open-source and available under the terms specified in the repository.
