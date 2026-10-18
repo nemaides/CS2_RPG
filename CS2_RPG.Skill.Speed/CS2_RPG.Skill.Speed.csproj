@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="I:\CS2Server\game\csgo\addons\counterstrikesharp\plugins\CS2_RPG\Skills" />
+	</Target>
+	<ItemGroup>
+	  <ProjectReference Include="..\CS2_RPG.csproj" />
+	</ItemGroup>
+</Project>

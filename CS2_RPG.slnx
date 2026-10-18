@@ -1,10 +1,9 @@
 <Solution>
-  <Project Path="../CS2_RPG.Skill.Health/CS2_RPG.Skill.Health.csproj" Id="992492d1-58f7-4bca-9818-f20bc428408b" />
-  <Project Path="../CS2_RPG.Skill.Lifesteal/CS2_RPG.Skill.Lifesteal.csproj" Id="29c71977-e02d-4973-8d38-5f523c442a2d" />
-  <Project Path="../CS2_RPG.Skill.Medic/CS2_RPG.Skill.Medic.csproj" Id="27984a8c-d3e7-401a-8dfd-989c7066e32d" />
-  <Project Path="../CS2_RPG.Skill.PoisonSmoke/CS2_RPG.Skill.PoisonSmoke.csproj" Id="2745a204-d396-411e-81a4-a60e33382a7e" />
-  <Project Path="../CS2_RPG.Skill.Resupply/CS2_RPG.Skill.Resupply.csproj" Id="e9c36926-8399-47a0-8e5f-960d3c4873eb" />
-  <Project Path="../CS2_RPG.Skill.Speed/CS2_RPG.Skill.Speed.csproj" Id="7c54039a-6749-4ed7-be29-9d950a837d6e" />
-  <Project Path="../KnockbackSkill/CS2_RPG.Skill.Knockback.csproj" Id="b5ca1ace-6089-4ffa-b9ec-1588be6742ea" />
   <Project Path="CS2_RPG.csproj" />
+  <Project Path="CS2_RPG.Skill.Health/CS2_RPG.Skill.Health.csproj" />
+  <Project Path="CS2_RPG.Skill.Lifesteal/CS2_RPG.Skill.Lifesteal.csproj" />
+  <Project Path="CS2_RPG.Skill.Medic/CS2_RPG.Skill.Medic.csproj" />
+  <Project Path="CS2_RPG.Skill.PoisonSmoke/CS2_RPG.Skill.PoisonSmoke.csproj" />
+  <Project Path="CS2_RPG.Skill.Resupply/CS2_RPG.Skill.Resupply.csproj" />
+  <Project Path="CS2_RPG.Skill.Speed/CS2_RPG.Skill.Speed.csproj" />
 </Solution>
