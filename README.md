@@ -159,3 +159,7 @@ Maybe even extend so you do /rpghelp Speed (for the speed skill) so it only show
 ## License
 
 This project is open-source and available under the terms specified in the repository.
+
+
+<sup>Disclaimer:</sup>
+<sup>This README.md was made using AI, regarding the code, AI was used to help debug some parts and as a sparring partner</sup>
