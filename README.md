@@ -1,6 +1,6 @@
-# CS2_RPG 
+# CS2 RPG 
 
-**CS2_RPG** is a modular, high-performance RPG plugin framework for Counter-Strike 2 servers powered by **CounterStrikeSharp** and **.NET 10.0**. 
+**CS2 RPG** is a modular, high-performance RPG plugin framework for Counter-Strike 2 servers powered by **CounterStrikeSharp** and **.NET 10.0**. 
 
 The framework features dynamic Assembly Load Context (ALC) skill loading, automated configuration synchronization, and a clean separation between the core plugin API and individual skill modules.
 
