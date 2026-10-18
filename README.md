@@ -1,6 +1,8 @@
 <sup>Disclaimer:</sup>
 
-<sup>This README.md was made using AI, regarding the code, AI was used to help debug some parts and as a sparring partner</sup>
+<sup>This README.md was made using AI, i cannot make things pretty even if my life depended on it.</sup>
+<sup>Regarding the code, AI was used to help debug some parts and as a sparring partner</sup>
+
 # CS2 RPG 
 
 **CS2 RPG** is a modular, high-performance RPG plugin framework for Counter-Strike 2 servers powered by **CounterStrikeSharp** and **.NET 10.0**. 
