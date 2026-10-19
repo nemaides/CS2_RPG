@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
+using CS2_RPG.API;
 using CS2_RPG.Models;
 using CS2_RPG.Services;
 using Microsoft.Data.Sqlite;
@@ -68,43 +69,24 @@ public static class RpgCommandHandler
 
     public static void ShowMenu(CCSPlayerController player, Dictionary<ulong, RpgPlayer> players, RpgConfig config, SkillManager skillManager)
     {
+        if (player == null || !player.IsValid) return;
         if (!players.TryGetValue(player.SteamID, out var rpgPlayer)) return;
 
         var skills = skillManager.LoadedSkills.Values.ToList();
-        int totalSkills = skills.Count;
-        int maxPages = Math.Max(1, (int)Math.Ceiling(totalSkills / (double)PageSize));
 
-        if (!_playerMenuPages.TryGetValue(player.SteamID, out int currentPage) || currentPage >= maxPages)
-        {
-            currentPage = 0;
-            _playerMenuPages[player.SteamID] = currentPage;
-        }
-
-        player.PrintToChat($"\x04--- [ RPG Upgrades (Page {currentPage + 1}/{maxPages}) | Points: {rpgPlayer.SkillPoints} ] ---");
+        player.PrintToChat($"\x04--- [ RPG Upgrades | Points: {rpgPlayer.SkillPoints} ] ---");
         player.PrintToChat($"\x01Type \x06/stats\x01 -> View full character stats");
 
-        int startIndex = currentPage * PageSize;
-        int endIndex = Math.Min(startIndex + PageSize, totalSkills);
-
-        for (int i = startIndex; i < endIndex; i++)
+        for (int i = 0; i < skills.Count; i++)
         {
             var skill = skills[i];
             int currentLevel = rpgPlayer.GetSkillLevel(skill.Id);
             int maxLevel = config.MaxUpgradeLevels.TryGetValue(skill.Id, out int mCap) ? mCap : skill.DefaultMaxLevel;
 
             string levelStatus = (maxLevel > 0 && currentLevel >= maxLevel) ? "\x02[MAX]\x01" : $"Lvl {currentLevel}/{maxLevel}";
-            int slotNumber = (i % PageSize) + 1;
+            int slotNumber = i + 1;
 
             player.PrintToChat($"\x01Type \x06/{slotNumber}\x01 -> {skill.DisplayName} ({levelStatus})");
-        }
-
-        if (currentPage < maxPages - 1)
-        {
-            player.PrintToChat($"\x01Type \x02/8\x01 -> Next Page ➡");
-        }
-        if (currentPage > 0)
-        {
-            player.PrintToChat($"\x01Type \x02/9\x01 -> ⬅ Previous Page");
         }
     }
 
@@ -154,5 +136,54 @@ public static class RpgCommandHandler
         player.PrintToChat($" \x04[RPG]\x01 Successfully upgraded \x06{skill.DisplayName}\x01 to level {currentLevel + 1}!");
 
         if (db != null) rpgPlayer.SaveToDatabase(db);
+    }
+
+    public static void ShowHelp(CCSPlayerController player, string[] args, SkillManager skillManager)
+    {
+        if (player == null || !player.IsValid) return;
+
+        var skillsList = skillManager.LoadedSkills.Values.ToList();
+
+        // If a specific skill was requested (e.g., /rpghelp 4 or /rpghelp poison_smoke)
+        if (args.Length > 0)
+        {
+            string query = args[0].Trim();
+            IRpgSkill? matchingSkill = null;
+
+            if (int.TryParse(query, out int index) && index >= 1 && index <= skillsList.Count)
+            {
+                matchingSkill = skillsList[index - 1];
+            }
+            else
+            {
+                matchingSkill = skillsList.FirstOrDefault(s =>
+                    s.Id.Equals(query, StringComparison.OrdinalIgnoreCase) ||
+                    s.DisplayName.Equals(query, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (matchingSkill != null)
+            {
+                player.PrintToChat($"\x04--- [ RPG Help: {matchingSkill.DisplayName} ] ---");
+                player.PrintToChat($"\x01{matchingSkill.Description}");
+                player.PrintToChat("\x05" + $"Max Level:\x01 {matchingSkill.DefaultMaxLevel} | " + "\x05" + $"Bonus/Level:\x01 +{matchingSkill.DefaultIncrement}");
+            }
+            else
+            {
+                player.PrintToChat($"\x02[RPG Help]\x01 Skill '{query}' not found. Type \x06/rpghelp\x01 for the list.");
+            }
+            return;
+        }
+
+        // Default: Matches the exact same header and line format as the upgrade menu
+        player.PrintToChat($"\x04--- [ RPG Skill Help Library ] ---");
+        player.PrintToChat($"\x01Type \x06/rpghelp <number or name>\x01 -> View skill details");
+
+        for (int i = 0; i < skillsList.Count; i++)
+        {
+            var skill = skillsList[i];
+            int slotNumber = i + 1;
+
+            player.PrintToChat($"\x01Type \x06{slotNumber}\x01 -> {skill.DisplayName} (\x06{skill.Id}\x01)");
+        }
     }
 }

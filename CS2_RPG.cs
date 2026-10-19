@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
+using CS2_RPG.API;
 using CS2_RPG.Commands;
 using CS2_RPG.Helpers;
 using CS2_RPG.Models;
@@ -15,7 +16,7 @@ namespace CS2_RPG;
 public class CS2_RPG : BasePlugin
 {
     public override string ModuleName => "CS2 RPG Mod";
-    public override string ModuleVersion => "0.3.0";
+    public override string ModuleVersion => "0.3.2";
     public override string ModuleAuthor => "Nemaides";
 
     private readonly Dictionary<ulong, RpgPlayer> _rpgPlayers = new();
@@ -61,8 +62,30 @@ public class CS2_RPG : BasePlugin
         SkillLogger.Log("=== CS2 RPG Plugin Initializing ===");
 
         Console.WriteLine("=========================================");
-        Console.WriteLine("[CS2 RPG] Initializing Modular RPG v0.3.0...");
+        Console.WriteLine($"[CS2 RPG] Initializing Modular RPG v{ModuleVersion}...");
         Console.WriteLine("=========================================");
+
+        // Register a hidden command directly without [ConsoleCommand] attributes
+        AddCommand("__rpg_internal_kill_pawn", "Internal handler for RPG player deaths", (caller, command) =>
+        {
+            // Strictly block players/clients from running this command manually
+            if (caller != null) return;
+
+            if (command.ArgCount >= 2 && int.TryParse(command.GetArg(1), out int slot))
+            {
+                Console.WriteLine($"[RPG API Debug] Internal command executing suicide for slot {slot}...");
+
+                var target = Utilities.GetPlayerFromSlot(slot);
+                if (target != null && target.IsValid && target.PawnIsAlive)
+                {
+                    target.CommitSuicide(false, true);
+                }
+                else
+                {
+
+                }
+            }
+        });
 
         LoadConfig();
 
@@ -135,7 +158,7 @@ public class CS2_RPG : BasePlugin
                 }
             }
         }, TimerFlags.REPEAT);
-
+        
         AddCommandListener("say", OnPlayerChat, HookMode.Pre);
         AddCommandListener("say_team", OnPlayerChat, HookMode.Pre);
 
@@ -401,4 +424,20 @@ public class CS2_RPG : BasePlugin
 
     [ConsoleCommand("rpg_setlevel", "Set exact level for a player")]
     public void CmdSetLevel(CCSPlayerController? p, CommandInfo c) { AdminCommands.SetPlayerLevel(p, c, _config, _rpgPlayers, _dbConnection); }
+
+    [ConsoleCommand("rpg_help", "View RPG skill descriptions")]
+    [ConsoleCommand("rpghelp", "View RPG skill descriptions")]
+    public void CmdRpgHelp(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player == null || !player.IsValid) return;
+
+        // Extract arguments if any were passed after /rpghelp
+        string[] args = new string[command.ArgCount - 1];
+        for (int i = 1; i < command.ArgCount; i++)
+        {
+            args[i - 1] = command.GetArg(i);
+        }
+
+        RpgCommandHandler.ShowHelp(player, args, _skillManager);
+    }
 }

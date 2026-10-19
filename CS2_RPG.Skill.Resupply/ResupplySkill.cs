@@ -8,6 +8,7 @@ public class ResupplySkill : IRpgSkill
 {
     public string Id => "resupply";
     public string DisplayName => "Ammo Resupply";
+    public string Description => "Grants a chance to automatically resupply magazines for your active weapon, keeping you in the fight longer without running out of ammunition.";
     public int DefaultMaxLevel => 5;
     public double DefaultIncrement => 3;
 

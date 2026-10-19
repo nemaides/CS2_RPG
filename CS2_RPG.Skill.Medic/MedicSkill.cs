@@ -9,6 +9,7 @@ public class MedicSkill : IRpgSkill
 {
     public string Id => "medic";
     public string DisplayName => "Medic Aura";
+    public string Description => "Heals nearby allies over time, providing support to your team and keeping them in the fight longer.";
     public int DefaultMaxLevel => 10;
     public double DefaultIncrement => 1.0;
 

@@ -8,6 +8,7 @@ public class SpeedSkill : IRpgSkill
 {
     public string Id => "speed";
     public string DisplayName => "Speed";
+    public string Description => "Increases your movement speed, allowing you to traverse the map faster and evade enemies more effectively.";
     public int DefaultMaxLevel => 10;
     public double DefaultIncrement => 3;
 

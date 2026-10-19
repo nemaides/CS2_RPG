@@ -102,6 +102,13 @@ internal class ReflectionSkillWrapper : IRpgSkill
 
     public string Id => (string)_type.GetProperty("Id")!.GetValue((object)_instance)!;
     public string DisplayName => (string)_type.GetProperty("DisplayName")!.GetValue((object)_instance)!;
+
+    // Dynamically retrieve Description with a safe fallback if missing
+    public string Description =>
+        _type.GetProperty("Description") != null
+            ? (string)_type.GetProperty("Description")!.GetValue((object)_instance)!
+            : "No description provided.";
+
     public int DefaultMaxLevel => (int)_type.GetProperty("DefaultMaxLevel")!.GetValue((object)_instance)!;
     public double DefaultIncrement =>
         _type.GetProperty("DefaultIncrement") != null

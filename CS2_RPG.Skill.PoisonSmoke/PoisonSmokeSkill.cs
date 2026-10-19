@@ -1,4 +1,6 @@
-﻿using CounterStrikeSharp.API;
+﻿using System;
+using System.Collections.Generic;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2_RPG.API;
@@ -9,6 +11,7 @@ public class PoisonSmokeSkill : IRpgSkill
 {
     public string Id => "poison_smoke";
     public string DisplayName => "Poison Smoke";
+    public string Description => "Damages enemies standing inside your thrown smoke grenades over time.";
     public int DefaultMaxLevel => 10;
     public double DefaultIncrement => 10.0;
 
@@ -31,14 +34,11 @@ public class PoisonSmokeSkill : IRpgSkill
             if (playerSlot < 0) return;
 
             var ownerController = Utilities.GetPlayerFromSlot(playerSlot);
-            if (ownerController == null || !ownerController.IsValid || ownerController.Connected != PlayerConnectedState.Connected) return;
+            if (ownerController == null || !ownerController.IsValid || ownerController.Connected != PlayerConnectedState.Connected)
+                return;
 
             var smokeEntities = Utilities.FindAllEntitiesByDesignerName<CSmokeGrenadeProjectile>("smokegrenade_projectile");
-            if (smokeEntities == null)
-            {
-                Server.PrintToConsole("[PoisonSmoke] No smoke entities found on map.");
-                return;
-            }
+            if (smokeEntities == null) return;
 
             double effectiveIncrement = upgradeIncrement <= 0 ? 10.0 : upgradeIncrement;
             int finalDamage = Math.Max(1, (int)Math.Round(level * effectiveIncrement));
@@ -46,12 +46,7 @@ public class PoisonSmokeSkill : IRpgSkill
             foreach (var smoke in smokeEntities)
             {
                 if (smoke == null || !smoke.IsValid) continue;
-
-                if (!IsSmokeOwnedByPlayer(smoke, ownerController.Index))
-                {
-                    continue;
-                }
-
+                if (!IsSmokeOwnedByPlayer(smoke, ownerController.Index)) continue;
                 if (smoke.SmokeEffectTickBegin <= 0) continue;
 
                 Vector? smokeOrigin = smoke.AbsOrigin;
@@ -75,7 +70,6 @@ public class PoisonSmokeSkill : IRpgSkill
 
                     if (distance2D <= SMOKE_RADIUS_2D && dz <= MAX_VERTICAL_OFFSET)
                     {
-                        Server.PrintToConsole($"[PoisonSmoke] Applying {finalDamage} damage to player {targetController.PlayerName}");
                         ApplySafeDamage(targetController, targetPawn, finalDamage);
                     }
                 }
@@ -86,41 +80,34 @@ public class PoisonSmokeSkill : IRpgSkill
             Server.PrintToConsole($"[PoisonSmoke] Error in OnPeriodicTick: {ex.Message}");
         }
     }
+
     private static void ApplySafeDamage(CCSPlayerController targetController, CCSPlayerPawn victimPawn, int damage)
     {
-        if (victimPawn == null || !victimPawn.IsValid || victimPawn.Health <= 0) return;
-
-        int slot = targetController.Slot;
-        if (PendingSuicideSlots.Contains(slot)) return;
-
-        int currentHealth = victimPawn.Health;
-        int newHealth = currentHealth - damage;
-
-        if (newHealth <= 0)
+        try
         {
-            PendingSuicideSlots.Add(slot);
+            if (targetController == null || !targetController.IsValid || victimPawn == null || !victimPawn.IsValid || victimPawn.Health <= 0)
+                return;
 
-            // Set health to 1 as a live buffer to avoid the 0-HP ghost state
-            victimPawn.Health = 1;
-            Utilities.SetStateChanged(victimPawn, "CBaseEntity", "m_iHealth");
+            int slot = targetController.Slot;
+            if (PendingSuicideSlots.Contains(slot)) return;
 
-            Server.NextFrame(() =>
+            int currentHealth = victimPawn.Health;
+            int newHealth = currentHealth - damage;
+
+            if (newHealth <= 0)
             {
-                var controller = Utilities.GetPlayerFromSlot(slot);
-                if (controller != null && controller.IsValid && controller.Connected == PlayerConnectedState.Connected)
-                {
-                    controller.CommitSuicide(true, true);
-                }
-                else
-                {
-                    PendingSuicideSlots.Remove(slot);
-                }
-            });
+                PendingSuicideSlots.Add(slot);
+                RpgPlayerActions.KillPlayer(slot);
+            }
+            else
+            {
+                victimPawn.Health = newHealth;
+                Utilities.SetStateChanged(victimPawn, "CBaseEntity", "m_iHealth");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            victimPawn.Health = newHealth;
-            Utilities.SetStateChanged(victimPawn, "CBaseEntity", "m_iHealth");
+            Server.PrintToConsole($"[PoisonSmoke] Error in ApplySafeDamage: {ex.Message}");
         }
     }
 

@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="CS2_RPG.csproj" />
   <Project Path="CS2_RPG.Skill.Health/CS2_RPG.Skill.Health.csproj" />
+  <Project Path="CS2_RPG.Skill.Knockback/CS2_RPG.Skill.Knockback.csproj" />
   <Project Path="CS2_RPG.Skill.Lifesteal/CS2_RPG.Skill.Lifesteal.csproj" />
   <Project Path="CS2_RPG.Skill.Medic/CS2_RPG.Skill.Medic.csproj" />
   <Project Path="CS2_RPG.Skill.PoisonSmoke/CS2_RPG.Skill.PoisonSmoke.csproj" />

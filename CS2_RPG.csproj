@@ -1,37 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="CS2_RPG.Skill.Health\**" />
-    <Compile Remove="CS2_RPG.Skill.Lifesteal\**" />
-    <Compile Remove="CS2_RPG.Skill.Medic\**" />
-    <Compile Remove="CS2_RPG.Skill.PoisonSmoke\**" />
-    <Compile Remove="CS2_RPG.Skill.Resupply\**" />
-    <Compile Remove="CS2_RPG.Skill.Speed\**" />
-    <EmbeddedResource Remove="CS2_RPG.Skill.Health\**" />
-    <EmbeddedResource Remove="CS2_RPG.Skill.Lifesteal\**" />
-    <EmbeddedResource Remove="CS2_RPG.Skill.Medic\**" />
-    <EmbeddedResource Remove="CS2_RPG.Skill.PoisonSmoke\**" />
-    <EmbeddedResource Remove="CS2_RPG.Skill.Resupply\**" />
-    <EmbeddedResource Remove="CS2_RPG.Skill.Speed\**" />
-    <None Remove="CS2_RPG.Skill.Health\**" />
-    <None Remove="CS2_RPG.Skill.Lifesteal\**" />
-    <None Remove="CS2_RPG.Skill.Medic\**" />
-    <None Remove="CS2_RPG.Skill.PoisonSmoke\**" />
-    <None Remove="CS2_RPG.Skill.Resupply\**" />
-    <None Remove="CS2_RPG.Skill.Speed\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="*" />
-    <PackageReference Include="CS2MenuManager" Version="1.0.43" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="CounterStrikeSharp.API" Version="*" />
+		<PackageReference Include="CS2MenuManager" Version="1.0.43" />
+		<PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="CS2_RPG.Skill.*\**" />
+		<EmbeddedResource Remove="CS2_RPG.Skill.*\**" />
+		<None Remove="CS2_RPG.Skill.*\**" />
+	</ItemGroup>
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="I:\CS2Server\game\csgo\addons\counterstrikesharp\plugins\CS2_RPG" />
 	</Target>
