@@ -14,10 +14,22 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 
 ## Key Features
 
-- **Modular Architecture:** Skills are built as standalone C# class libraries (`.dll` files) and dynamically discovered at runtime without modifying core plugin code.
-- **ALC Safety:** Uses primitive parameter types across boundaries to ensure assembly isolation and memory safety.
+- **Modular Architecture:** Skills are compiled as standalone C# class libraries (`.dll` files) and dynamically discovered at runtime without modifying core plugin code.
+- **ALC & Boundary Safety:** Uses primitive parameter types across boundaries to ensure assembly isolation and memory safety.
 - **Automatic Configuration Sync:** Missing skill defaults automatically populate into `rpg_config.json` upon initial discovery.
-- **Extensible Hooks:** Seamlessly handle player events such as spawns, damage events, and background periodic ticks.
+- **Dynamic Attributed Damage & Frags:** Helper actions like `RpgPlayerActions.KillPlayer()` allow custom skills (e.g., Poison Smoke) to register killfeed icons and increment scoreboard stats cleanly without triggering suicides or 0 HP ghosting state bugs.
+- **Interactive Commands & Help:** Players can use `/rpg`, `/stats`, and `/rpghelp` (with targeted help queries such as `/rpghelp speed`) to view detailed skill descriptions.
+
+---
+
+### Commands Reference
+
+| Command | Description |
+| :--- | :--- |
+| **/rpg, /rpg_menu, /rpg_upgrade** | Opens the main RPG upgrade menu. |
+| **/stats, /rpg_stats** | Displays your current RPG stats and level progress. |
+| **/rpghelp [skill]** | Lists all registered RPG skills or details a specific skill. |
+| **/rpg_admin** | Displays available RPG admin commands. |
 
 ---
 
@@ -56,20 +68,48 @@ namespace CS2_RPG.API;
 
 public interface IRpgSkill
 {
+    /// <summary>Unique identifier for config/database (e.g., "speed", "poison_smoke")</summary>
     string Id { get; }
+
+    /// <summary>Display name shown in chat menus and stats</summary>
     string DisplayName { get; }
+
+    /// <summary>Summary of what the skill does, shown in /rpghelp</summary>
+    string Description { get; }
+
+    /// <summary>Default max level if not specified in config</summary>
     int DefaultMaxLevel { get; }
+
+    /// <summary>Default increment value if not specified in config</summary>
     double DefaultIncrement { get; }
 
+    /// <summary>Called when a player spawns and has points in this skill</summary>
     void OnPlayerSpawn(int playerSlot, int level, double upgradeIncrement);
+
+    /// <summary>Called when a player deals or takes damage</summary>
     void OnPlayerHurt(int attackerSlot, int victimSlot, int damage, int attackerLevel, int victimLevel, double upgradeIncrement);
-    void OnPeriodicTick(int playerSlot, int level);
+
+    /// <summary>Called periodically on background support ticks (if applicable)</summary>
+    void OnPeriodicTick(int playerSlot, int level, double upgradeIncrement);
 }
 ```
 
 ---
 
-### 3. Skill Template Example
+### 3. Handling Kills & Dynamic Attribution
+If your custom skill deals custom/periodic damage (e.g., Poison Smoke, Fire, or Flashbang damage) and needs to kill the victim with proper attribution:
+
+```csharp
+using CS2_RPG.API;
+
+// Safely kills the victim, credits the attacker, increments scoreboard kills,
+// and broadcasts the custom weapon icon in the killfeed.
+RpgPlayerActions.KillPlayer(attackerSlot, victimSlot, "smokegrenade");
+```
+
+---
+
+### 4. Skill Template Example
 Here is a ready-to-use template for a new skill (e.g., a **Health Regeneration Skill**):
 
 ```csharp
@@ -86,6 +126,9 @@ public class RegenSkill : IRpgSkill
 
     // Name displayed in logging and UI
     public string DisplayName => "Health Regeneration";
+
+    // Description shown in /rpghelp and skill menus
+    public string Description => "Slowly restores your health over time when injured.";
 
     // Initial default max level for rpg_config.json
     public int DefaultMaxLevel => 10;
@@ -130,7 +173,7 @@ public class RegenSkill : IRpgSkill
 
 ---
 
-### 4. Key Rules & Best Practices
+### 5. Key Rules & Best Practices
 
 | Mechanism | Recommendation / Rule |
 | :--- | :--- |
@@ -141,7 +184,7 @@ public class RegenSkill : IRpgSkill
 
 ---
 
-### 5. Deployment
+### 6. Deployment
 
 1. **Build Solution:** Compile the skill project (`CS2_RPG.Skill.YourSkillName.dll`).
 2. **Deploy DLL:** Copy the output `.dll` file directly into your server's Skills directory:
@@ -156,11 +199,6 @@ public class RegenSkill : IRpgSkill
 The `SkillManager` will automatically discover the DLL, output registration details to the terminal, and synchronize its defaults into `rpg_config.json`.
 
 ---
-
-## ToDo
-
-I plan on adding a /rpghelp command, that explains what the skill does, of which the skill developer must state when developing the skill
-Maybe even extend so you do /rpghelp Speed (for the speed skill) so it only shows that specific skill help text.
 
 ## License
 
