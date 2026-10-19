@@ -1,7 +1,7 @@
 <sup>Disclaimer:</sup>
 
 <sup>This README.md was made using AI, i cannot make things pretty even if my life depended on it.</sup>
-<sup>Regarding the code, AI was used to help debug some parts and as a sparring partner</sup>
+<sup>Regarding the code, AI was used to help debug some parts and as a helper tool, the code is NOT fully AI generated</sup>
 
 # CS2 RPG 
 
