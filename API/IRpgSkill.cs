@@ -32,8 +32,8 @@ public interface IRpgSkill
 }
 public static class RpgPlayerActions
 {
-    public static void KillPlayer(int playerSlot)
+    public static void KillPlayer(int attackerSlot, int victimSlot, string weapon = "smokegrenade")
     {
-        Server.ExecuteCommand($"__rpg_internal_kill_pawn {playerSlot}");
+        Server.ExecuteCommand($"__rpg_internal_kill_pawn {attackerSlot} {victimSlot} {weapon}");
     }
 }

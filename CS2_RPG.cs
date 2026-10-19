@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Utils;
 using CS2_RPG.API;
 using CS2_RPG.Commands;
 using CS2_RPG.Helpers;
@@ -71,22 +72,48 @@ public class CS2_RPG : BasePlugin
             // Strictly block players/clients from running this command manually
             if (caller != null) return;
 
-            if (command.ArgCount >= 2 && int.TryParse(command.GetArg(1), out int slot))
+            if (command.ArgCount >= 3 &&
+                int.TryParse(command.GetArg(1), out int attackerSlot) &&
+                int.TryParse(command.GetArg(2), out int victimSlot))
             {
-                Console.WriteLine($"[RPG API Debug] Internal command executing suicide for slot {slot}...");
+                string weapon = command.ArgCount >= 4 ? command.GetArg(3) : "smokegrenade";
 
-                var target = Utilities.GetPlayerFromSlot(slot);
-                if (target != null && target.IsValid && target.PawnIsAlive)
-                {
-                    target.CommitSuicide(false, true);
-                }
-                else
-                {
+                var victim = Utilities.GetPlayerFromSlot(victimSlot);
+                var attacker = Utilities.GetPlayerFromSlot(attackerSlot);
 
+                if (victim != null && victim.IsValid && victim.PawnIsAlive)
+                {
+                    var victimPawn = victim.PlayerPawn?.Value;
+                    if (victimPawn != null && victimPawn.IsValid)
+                    {
+                        if (attacker != null && attacker.IsValid)
+                        {
+                            // 1. Increment the scoreboard kill stats for the attacker
+                            if (attacker.ActionTrackingServices != null)
+                            {
+                                attacker.ActionTrackingServices.MatchStats.Kills++;
+                            }
+
+                            // 2. Broadcast the killfeed event
+                            var deathEvent = new EventPlayerDeath(false)
+                            {
+                                Userid = victim,
+                                Attacker = attacker,
+                                Weapon = weapon,
+                                DmgHealth = 100,
+                                Headshot = false
+                            };
+                            deathEvent.FireEvent(false);
+                        }
+
+                        // 3. Clear health and clean up the dead pawn entity
+                        victimPawn.Health = 0;
+                        Utilities.SetStateChanged(victimPawn, "CBaseEntity", "m_iHealth");
+                        victimPawn.AcceptInput("Kill", null, null, "");
+                    }
                 }
             }
         });
-
         LoadConfig();
 
         try
@@ -282,7 +309,7 @@ public class CS2_RPG : BasePlugin
         else if (!_rpgPlayers.ContainsKey(steamId))
             _rpgPlayers[steamId] = new RpgPlayer(steamId, player.PlayerName);
 
-        player.PrintToChat($" \x04[RPG]\x01 Welcome! Type \x06/stats\x01 to view progress or \x06/rpg\x01 for upgrades.");
+        player.PrintToChat($" \x04[RPG]\x01 Welcome! Type \x06/stats\x01 to view progress, \x06/rpg\x01 for upgrades or \x06/rpghelp\x01 to see skill descriptions.");
         return HookResult.Continue;
     }
 

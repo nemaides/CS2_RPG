@@ -70,7 +70,7 @@ public class PoisonSmokeSkill : IRpgSkill
 
                     if (distance2D <= SMOKE_RADIUS_2D && dz <= MAX_VERTICAL_OFFSET)
                     {
-                        ApplySafeDamage(targetController, targetPawn, finalDamage);
+                        ApplySafeDamage(ownerController.Slot, targetController, targetPawn, finalDamage);
                     }
                 }
             }
@@ -81,7 +81,7 @@ public class PoisonSmokeSkill : IRpgSkill
         }
     }
 
-    private static void ApplySafeDamage(CCSPlayerController targetController, CCSPlayerPawn victimPawn, int damage)
+    private static void ApplySafeDamage(int attackerSlot, CCSPlayerController targetController, CCSPlayerPawn victimPawn, int damage)
     {
         try
         {
@@ -97,7 +97,7 @@ public class PoisonSmokeSkill : IRpgSkill
             if (newHealth <= 0)
             {
                 PendingSuicideSlots.Add(slot);
-                RpgPlayerActions.KillPlayer(slot);
+                RpgPlayerActions.KillPlayer(attackerSlot, slot, "smokegrenade");
             }
             else
             {
