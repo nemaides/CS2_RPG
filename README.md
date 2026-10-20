@@ -146,7 +146,7 @@ public class RegenSkill : IRpgSkill
         // Executes when player damage occurs. Leave empty if not needed.
     }
 
-    public void OnPeriodicTick(int playerSlot, int level)
+    public void OnPeriodicTick(int playerSlot, int level, double upgradeIncrement)
     {
         // Executes on the background timer (default every 3s)
         if (level <= 0 || playerSlot < 0) return;
@@ -161,7 +161,7 @@ public class RegenSkill : IRpgSkill
 
         if (pawn.Health < maxHp)
         {
-            int healAmount = (int)Math.Round(level * DefaultIncrement);
+            int healAmount = (int)Math.Round(level * upgradeIncrement);
             pawn.Health = Math.Min(pawn.Health + healAmount, maxHp);
 
             // Synchronize updated health property over the network graph
