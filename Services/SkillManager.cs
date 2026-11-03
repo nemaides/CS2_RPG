@@ -157,6 +157,34 @@ internal class ReflectionSkillWrapper : IRpgSkill
         }
     }
 
+    public void OnPlayerJump(int playerSlot, int level, bool isGrounded, double upgradeIncrement)
+    {
+        try
+        {
+            _type.GetMethod(nameof(OnPlayerJump))?.Invoke(
+                (object)_instance,
+                new object[] { playerSlot, level, isGrounded, upgradeIncrement });
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] OnPlayerJump failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+        }
+    }
+
+    public void OnPlayerDeath(int playerSlot, int level, double upgradeIncrement)
+    {
+        try
+        {
+            _type.GetMethod(nameof(OnPlayerDeath))?.Invoke(
+                (object)_instance,
+                new object[] { playerSlot, level, upgradeIncrement });
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] OnPlayerDeath failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+        }
+    }
+
     public int GetObjectiveXpBonus(int level, double upgradeIncrement)
     {
         try
