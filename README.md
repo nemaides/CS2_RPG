@@ -23,7 +23,31 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 | **/rpg, /rpg_menu, /rpg_upgrade** | Opens the main RPG upgrade menu. |
 | **/stats, /rpg_stats** | Displays your current RPG stats and level progress. |
 | **/rpghelp [skill]** | Lists all registered RPG skills or details a specific skill. |
+| **/rpg top** or **/rpg_top** | Shows the top five players, ranked by prestige, level, then XP. |
+| **/rpg profile `<name>`** or **/rpg_profile `<name>`** | Shows a player's RPG profile. |
+| **/rpg_quests** | Shows daily and weekly quest progress (periods use UTC). |
+| **/rpg_prestige [confirm]** | Prestiges after every loaded skill reaches its configured maximum. Confirmation resets level, XP, points, and skill upgrades. |
+| **/rpg_respec [confirm]** | Resets skill upgrades, refunds spent points, and costs the configured XP amount. |
+| **/rpg_title [title]** | Lists unlocked prestige titles or selects one to display in stats and profiles. |
 | **/rpg_admin** | Displays available RPG admin commands. |
+
+The chat upgrade menu displays up to seven skills per page. Type `/1`–`/7` to choose a skill, `/8` for the next page, and `/9` for the previous page. Page state is tracked independently for each player.
+
+Prestige titles unlock at prestige 1 (`Veteran`), 3 (`Elite`), and 5 (`Legend`). Prestige requires at least one loaded skill and a positive maximum level for every loaded skill; any uncapped skill prevents prestige. The final confirmation must be entered within 30 seconds.
+
+Additional XP is awarded for assists, round wins, round MVPs, and bomb plants/defuses. These activity rewards share a 10 XP per-player, per-round default cap to limit farming. Daily quests track player kills and headshots for 25 XP each; weekly quests track assists and round wins for 50 XP each. That is at most 50 XP from daily quests and 100 XP from weekly quests, separate from normal kill XP and the activity cap. Default player kills award 15 XP plus 5 for a headshot; bots award 10% of the normal kill reward. Weapon overrides and all quest goals, rewards, activity XP, the per-round cap, and respec cost are configurable in `rpg_config.json`.
+
+| Config key | Default | Purpose |
+| :--- | :---: | :--- |
+| `DefaultXP`, `HeadshotBonus`, `BotXpMultiplier` | 15, 5, 0.1 | Normal kill reward, headshot bonus, and bot reward multiplier |
+| `AssistXP`, `RoundWinXP`, `MvpXP` | 5, 5, 5 | Activity XP rewards |
+| `BombPlantXP`, `BombDefuseXP` | 5, 5 | Objective XP rewards |
+| `MaxBonusXPPerRound` | 10 | Combined activity XP cap per player per round |
+| `RespecXPCost` | 100 | XP cost to reset skill upgrades |
+| `DailyKillQuestTarget`, `DailyKillQuestXP` | 10, 25 | Daily player-kill goal and reward |
+| `DailyHeadshotQuestTarget`, `DailyHeadshotQuestXP` | 5, 25 | Daily headshot-kill goal and reward |
+| `WeeklyAssistQuestTarget`, `WeeklyAssistQuestXP` | 15, 50 | Weekly assist goal and reward |
+| `WeeklyWinQuestTarget`, `WeeklyWinQuestXP` | 5, 50 | Weekly round-win goal and reward |
 
 ---
 

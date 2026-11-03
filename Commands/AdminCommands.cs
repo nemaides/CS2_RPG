@@ -97,9 +97,17 @@ public static class AdminCommands
             rpgTarget.Level = 1;
             rpgTarget.XP = 0;
             rpgTarget.SkillPoints = 0;
+            rpgTarget.Prestige = 0;
+            rpgTarget.SelectedTitle = string.Empty;
             rpgTarget.SkillLevels.Clear(); // Clears all dynamic modular skills[cite: 1]
 
-            if (db != null) rpgTarget.SaveToDatabase(db);
+            if (db != null)
+            {
+                rpgTarget.SaveToDatabase(db);
+                using var deleteQuests = new SqliteCommand("DELETE FROM player_quests WHERE SteamId = @steamId;", db);
+                deleteQuests.Parameters.AddWithValue("@steamId", (long)rpgTarget.SteamId);
+                deleteQuests.ExecuteNonQuery();
+            }
 
             target.PrintToChat(" \x04[RPG]\x01 Your character stats have been reset by an administrator.");
 

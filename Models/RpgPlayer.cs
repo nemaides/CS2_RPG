@@ -10,6 +10,8 @@ public class RpgPlayer
     public int Level { get; set; } = 1;
     public int XP { get; set; } = 0;
     public int SkillPoints { get; set; } = 0;
+    public int Prestige { get; set; } = 0;
+    public string SelectedTitle { get; set; } = string.Empty;
 
     public Dictionary<string, int> SkillLevels { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -57,7 +59,7 @@ public class RpgPlayer
     {
         var player = new RpgPlayer(steamId, playerName);
 
-        string query = "SELECT Level, XP, SkillPoints, SkillData FROM players WHERE SteamId = @steamId;";
+        string query = "SELECT Level, XP, SkillPoints, SkillData, Prestige, SelectedTitle FROM players WHERE SteamId = @steamId;";
         using var command = new SqliteCommand(query, dbConnection);
         command.Parameters.AddWithValue("@steamId", (long)steamId);
 
@@ -67,6 +69,8 @@ public class RpgPlayer
             player.Level = reader.GetInt32(0);
             player.XP = reader.GetInt32(1);
             player.SkillPoints = reader.GetInt32(2);
+            player.Prestige = reader.GetInt32(4);
+            player.SelectedTitle = reader.IsDBNull(5) ? string.Empty : reader.GetString(5);
 
             if (!reader.IsDBNull(3))
             {
@@ -95,14 +99,16 @@ public class RpgPlayer
         string jsonBlob = JsonSerializer.Serialize(SkillLevels);
 
         string query = @"
-            INSERT INTO players (SteamId, Name, Level, XP, SkillPoints, SkillData)
-            VALUES (@steamId, @name, @level, @xp, @points, @skillData)
+            INSERT INTO players (SteamId, Name, Level, XP, SkillPoints, SkillData, Prestige, SelectedTitle)
+            VALUES (@steamId, @name, @level, @xp, @points, @skillData, @prestige, @selectedTitle)
             ON CONFLICT(SteamId) DO UPDATE SET
                 Name = @name,
                 Level = @level,
                 XP = @xp,
                 SkillPoints = @points,
-                SkillData = @skillData;";
+                SkillData = @skillData,
+                Prestige = @prestige,
+                SelectedTitle = @selectedTitle;";
 
         using var command = new SqliteCommand(query, dbConnection);
         command.Parameters.AddWithValue("@steamId", (long)SteamId);
@@ -111,6 +117,8 @@ public class RpgPlayer
         command.Parameters.AddWithValue("@xp", XP);
         command.Parameters.AddWithValue("@points", SkillPoints);
         command.Parameters.AddWithValue("@skillData", jsonBlob);
+        command.Parameters.AddWithValue("@prestige", Prestige);
+        command.Parameters.AddWithValue("@selectedTitle", SelectedTitle);
         command.ExecuteNonQuery();
     }
 }
