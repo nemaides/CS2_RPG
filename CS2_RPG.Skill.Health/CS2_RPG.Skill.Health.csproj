@@ -9,6 +9,9 @@
 		<Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="I:\CS2Server\game\csgo\addons\counterstrikesharp\plugins\CS2_RPG\Skills" />
 	</Target>
 	<ItemGroup>
+	  <PackageReference Include="MySqlConnector" Version="2.6.2" />
+	</ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\CS2_RPG.csproj" />
 	</ItemGroup>
 </Project>
