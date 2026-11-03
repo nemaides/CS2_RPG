@@ -13,10 +13,6 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 - **Automatic Configuration Sync:** Missing skill defaults automatically populate into `rpg_config.json` upon initial discovery.
 - **Dynamic Attributed Damage & Frags:** Helper actions like `RpgPlayerActions.KillPlayer()` allow custom skills (e.g., Poison Smoke) to register killfeed icons and increment scoreboard stats cleanly without triggering suicides or 0 HP ghosting state bugs.
 - **Interactive Commands & Help:** Players can use `/rpg`, `/stats`, and `/rpghelp` (with targeted help queries such as `/rpghelp speed`) to view detailed skill descriptions.
-- **Recovery Skill:** The optional Recovery module slowly restores up to 2 HP every 3 seconds after 9 seconds without taking damage, capped at 100 HP to limit stacking with other healing skills.
-- **Objective Specialist:** The optional skill grants up to 10 bonus XP per bomb plant or defuse.
-- **Flash Guard:** The optional skill reduces flash duration by up to 10%.
-- **Clutch:** The optional skill grants a once-per-round, brief movement boost when you are your team's last survivor, capped at 5% additional speed.
 
 ---
 
