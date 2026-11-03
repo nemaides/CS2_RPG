@@ -24,6 +24,7 @@ public class CS2_RPG : BasePlugin
     private readonly SkillManager _skillManager = new();
     private SqliteConnection? _dbConnection;
     private RpgConfig _config = new();
+    private readonly Dictionary<ulong, int> _roundBonusXp = new();
 
     private string ConfigPath
     {
@@ -236,11 +237,37 @@ public class CS2_RPG : BasePlugin
                 _config = JsonSerializer.Deserialize<RpgConfig>(json, options) ?? new RpgConfig();
 
                 bool configUpdated = false;
-
-                if (_config._Instructions == null || !_config._Instructions.Any())
+                string[] newConfigProperties =
                 {
-                    _config._Instructions = defaultConfig._Instructions;
-                    configUpdated = true;
+                    nameof(RpgConfig.AssistXP), nameof(RpgConfig.RoundWinXP), nameof(RpgConfig.MvpXP),
+                    nameof(RpgConfig.BombPlantXP), nameof(RpgConfig.BombDefuseXP), nameof(RpgConfig.MaxBonusXPPerRound),
+                    nameof(RpgConfig.RespecXPCost), nameof(RpgConfig.DailyKillQuestTarget), nameof(RpgConfig.DailyKillQuestXP),
+                    nameof(RpgConfig.DailyHeadshotQuestTarget), nameof(RpgConfig.DailyHeadshotQuestXP),
+                    nameof(RpgConfig.WeeklyAssistQuestTarget), nameof(RpgConfig.WeeklyAssistQuestXP),
+                    nameof(RpgConfig.WeeklyWinQuestTarget), nameof(RpgConfig.WeeklyWinQuestXP)
+                };
+                using (var document = JsonDocument.Parse(json))
+                {
+                    var root = document.RootElement;
+                    if (root.ValueKind == JsonValueKind.Object &&
+                        newConfigProperties.Any(name => !root.EnumerateObject().Any(property =>
+                            property.Name.Equals(name, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        configUpdated = true;
+                    }
+                }
+
+                if (_config._Instructions == null)
+                {
+                    _config._Instructions = new List<string>();
+                }
+                foreach (string instruction in defaultConfig._Instructions)
+                {
+                    if (!_config._Instructions.Contains(instruction))
+                    {
+                        _config._Instructions.Add(instruction);
+                        configUpdated = true;
+                    }
                 }
 
                 if (configUpdated)
@@ -321,6 +348,8 @@ public class CS2_RPG : BasePlugin
 
         ulong steamId = player.SteamID;
         _connectedPlayers.Remove(steamId);
+        _roundBonusXp.Remove(steamId);
+        RpgCommandHandler.ForgetPlayer(steamId);
 
         if (_rpgPlayers.TryGetValue(steamId, out var rpgPlayer))
         {
@@ -391,8 +420,98 @@ public class CS2_RPG : BasePlugin
             attacker.PrintToChat($" \x04[RPG]\x01 +{finalXp} XP for killing {victim.PlayerName} with \x05{weaponDisplayName}{botTag}\x01 | \x06XP: {rpgAttacker.XP}/{reqXp}\x01 | \x05Points: {rpgAttacker.SkillPoints}\x01");
 
             if (_dbConnection != null) rpgAttacker.SaveToDatabase(_dbConnection);
+
+            if (victim.IsValid && !victim.IsBot && attacker.TeamNum != victim.TeamNum)
+            {
+                RpgQuestService.RecordDailyKill(_dbConnection, rpgAttacker, attacker, _config);
+                if (@event.Headshot)
+                    RpgQuestService.RecordDailyHeadshot(_dbConnection, rpgAttacker, attacker, _config);
+            }
+        }
+
+        var assister = @event.Assister;
+        if (assister != null && assister.IsValid && !assister.IsBot && victim != null && victim.IsValid &&
+            assister != attacker && assister != victim && assister.TeamNum != victim.TeamNum &&
+            _rpgPlayers.TryGetValue(assister.SteamID, out var rpgAssister))
+        {
+            AwardActivityXP(assister, rpgAssister, _config.AssistXP, "assist");
+            RpgQuestService.RecordWeeklyAssist(_dbConnection, rpgAssister, assister, _config);
         }
         return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
+    {
+        _roundBonusXp.Clear();
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+    {
+        int winnerTeam = @event.Winner;
+        if (winnerTeam <= 1) return HookResult.Continue;
+
+        foreach (var player in Utilities.GetPlayers())
+        {
+            if (player == null || !player.IsValid || player.IsBot || player.TeamNum != winnerTeam) continue;
+
+            AwardActivityXP(player, _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer) ? rpgPlayer : null,
+                _config.RoundWinXP, "round win");
+            if (rpgPlayer != null)
+                RpgQuestService.RecordWeeklyWin(_dbConnection, rpgPlayer, player, _config);
+        }
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnRoundMvp(EventRoundMvp @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player != null && player.IsValid && !player.IsBot &&
+            _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+        {
+            AwardActivityXP(player, rpgPlayer, _config.MvpXP, "round MVP");
+        }
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnBombPlanted(EventBombPlanted @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player != null && player.IsValid && !player.IsBot &&
+            _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+        {
+            AwardActivityXP(player, rpgPlayer, _config.BombPlantXP, "bomb plant");
+        }
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnBombDefused(EventBombDefused @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player != null && player.IsValid && !player.IsBot &&
+            _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+        {
+            AwardActivityXP(player, rpgPlayer, _config.BombDefuseXP, "bomb defuse");
+        }
+        return HookResult.Continue;
+    }
+
+    private void AwardActivityXP(CCSPlayerController player, RpgPlayer? rpgPlayer, int requestedXP, string reason)
+    {
+        int cap = Math.Max(0, _config.MaxBonusXPPerRound);
+        int alreadyEarned = _roundBonusXp.TryGetValue(player.SteamID, out int total) ? total : 0;
+        int xpAwarded = Math.Min(Math.Max(0, requestedXP), Math.Max(0, cap - alreadyEarned));
+        if (xpAwarded == 0 || rpgPlayer == null) return;
+
+        _roundBonusXp[player.SteamID] = alreadyEarned + xpAwarded;
+        rpgPlayer.AddXP(xpAwarded);
+        if (_dbConnection != null) rpgPlayer.SaveToDatabase(_dbConnection);
+        player.PrintToChat($" \x04[RPG]\x01 +{xpAwarded} XP for {reason} | Bonus XP this round: {_roundBonusXp[player.SteamID]}/{cap}");
     }
 
     [GameEventHandler]
@@ -466,5 +585,55 @@ public class CS2_RPG : BasePlugin
         }
 
         RpgCommandHandler.ShowHelp(player, args, _skillManager);
+    }
+
+    [ConsoleCommand("rpg_prestige", "Prestige after maxing all loaded skills")]
+    public void CmdPrestige(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && player.IsValid)
+            RpgCommandHandler.HandlePrestige(player, GetCommandArguments(command), _rpgPlayers, _config, _skillManager, _dbConnection);
+    }
+
+    [ConsoleCommand("rpg_respec", "Reset skill upgrades for XP")]
+    public void CmdRespec(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && player.IsValid)
+            RpgCommandHandler.HandleRespec(player, GetCommandArguments(command), _rpgPlayers, _config, _dbConnection, _skillManager);
+    }
+
+    [ConsoleCommand("rpg_title", "Choose an unlocked RPG title")]
+    public void CmdTitle(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && player.IsValid)
+            RpgCommandHandler.HandleTitle(player, GetCommandArguments(command), _rpgPlayers, _dbConnection);
+    }
+
+    [ConsoleCommand("rpg_quests", "View RPG quests")]
+    public void CmdQuests(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && player.IsValid && _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+            RpgQuestService.ShowQuests(player, rpgPlayer, _dbConnection, _config);
+    }
+
+    [ConsoleCommand("rpg_top", "View the RPG leaderboard")]
+    public void CmdLeaderboard(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && player.IsValid)
+            RpgCommandHandler.ShowLeaderboard(player, _dbConnection);
+    }
+
+    [ConsoleCommand("rpg_profile", "View a player's RPG profile")]
+    public void CmdProfile(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && player.IsValid)
+            RpgCommandHandler.ShowProfile(player, command.ArgString.Trim().Trim('"', '\''), _dbConnection, _rpgPlayers);
+    }
+
+    private static string[] GetCommandArguments(CommandInfo command)
+    {
+        var arguments = new string[Math.Max(0, command.ArgCount - 1)];
+        for (int i = 1; i < command.ArgCount; i++)
+            arguments[i - 1] = command.GetArg(i);
+        return arguments;
     }
 }
