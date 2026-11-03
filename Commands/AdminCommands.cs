@@ -37,7 +37,8 @@ public static class AdminCommands
             player.PrintToChat("\x01Type \x06/rpg_reset <name>\x01 -> Reset player stats");
             player.PrintToChat("\x01Type \x06/rpg_addlevel <name> <amount>\x01 -> Add levels");
             player.PrintToChat("\x01Type \x06/rpg_setlevel <name> <level>\x01 -> Set exact level");
-            player.PrintToChat("\x01" + "Console: \x06rpg_reset\x01 | \x06rpg_addlevel\x01 | \x06rpg_setlevel\x01");
+            player.PrintToChat("\x01Type \x06/rpg_skills list\x01 -> List loaded RPG skills");
+            player.PrintToChat("\x01" + "Console: \x06rpg_reset\x01 | \x06rpg_addlevel\x01 | \x06rpg_setlevel\x01 | \x06rpg_skills list");
         }
         else
         {
@@ -45,6 +46,7 @@ public static class AdminCommands
             Server.PrintToConsole(" - rpg_reset <player_name>");
             Server.PrintToConsole(" - rpg_addlevel <player_name> <amount>");
             Server.PrintToConsole(" - rpg_setlevel <player_name> <level>");
+            Server.PrintToConsole(" - rpg_skills list");
         }
     }
 

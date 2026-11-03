@@ -48,6 +48,7 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 | **/rpg_respec [confirm]** | Resets skill upgrades, refunds spent points, and costs the configured XP amount. |
 | **/rpg_title [title]** | Lists unlocked prestige titles or selects one to display in stats and profiles. |
 | **/rpg_admin** | Displays available RPG admin commands. |
+| **/rpg_skills list** | Lists loaded skills with their IDs and maximum levels (server console or configured admins). |
 
 The chat upgrade menu displays up to seven skills per page. Type `/1`–`/7` to choose a skill, `/8` for the next page, and `/9` for the previous page. Page state is tracked independently for each player.
 
