@@ -29,6 +29,15 @@ public interface IRpgSkill
 
     /// <summary>Called periodically on background support ticks (if applicable)</summary>
     void OnPeriodicTick(int playerSlot, int level, double upgradeIncrement);
+
+    /// <summary>Returns bonus XP for planting or defusing the bomb, if supported.</summary>
+    int GetObjectiveXpBonus(int level, double upgradeIncrement) => 0;
+
+    /// <summary>Returns a multiplier for the duration of a flash effect, if supported.</summary>
+    double GetBlindDurationMultiplier(int level, double upgradeIncrement) => 1.0;
+
+    /// <summary>Called at the start of each round to reset round-limited skill effects.</summary>
+    void OnRoundStart() { }
 }
 public static class RpgPlayerActions
 {

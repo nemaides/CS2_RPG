@@ -10,13 +10,12 @@ public class KnockbackSkill : IRpgSkill
     public string Id => "knockback";
     public string DisplayName => "Repulsion Blast";
     public string Description => "When you hit an enemy, you have a chance to knock them back, sending them flying away from you and disrupting their aim.";
-    public int DefaultMaxLevel => 10;
-    public double DefaultIncrement => 5.0; // 5% per level -> 50% at max level
+    public int DefaultMaxLevel => 5;
+    public double DefaultIncrement => 4.0; // 4% per level -> 20% at max level
 
-    // --- TUNED FORCES ---
-    private const float BaseKnockbackForce = 450.0f;
-    private const float ForcePerLevel = 45.0f;        // 450 + (10 * 45) = 900 Force at Max Level
-    private const float UpwardPushForce = 180.0f;     // Clean vertical pop to break ground friction
+    private const float BaseKnockbackForce = 300.0f;
+    private const float ForcePerLevel = 25.0f;
+    private const float UpwardPushForce = 100.0f;
 
     // Tracks the last server tick a player received knockback to block shotgun pellet stacking
     private static readonly Dictionary<int, int> LastKnockbackTick = new();
