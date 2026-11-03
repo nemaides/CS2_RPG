@@ -41,18 +41,19 @@ The chat upgrade menu displays up to seven skills per page. Type `/1`–`/7` to 
 
 Prestige titles unlock at prestige 1 (`Veteran`), 3 (`Elite`), and 5 (`Legend`). Prestige requires at least one loaded skill and a positive maximum level for every loaded skill; any uncapped skill prevents prestige. The final confirmation must be entered within 30 seconds.
 
-Additional XP is awarded for assists, round wins, round MVPs, and bomb plants/defuses. These activity rewards share a per-player, per-round cap to limit farming. Daily quests track player kills and headshots; weekly quests track assists and round wins. Quest goals, rewards, activity XP, the per-round cap, and respec cost are configurable in `rpg_config.json`.
+Additional XP is awarded for assists, round wins, round MVPs, and bomb plants/defuses. These activity rewards share a 10 XP per-player, per-round default cap to limit farming. Daily quests track player kills and headshots for 25 XP each; weekly quests track assists and round wins for 50 XP each. That is at most 50 XP from daily quests and 100 XP from weekly quests, separate from normal kill XP and the activity cap. Default player kills award 15 XP plus 5 for a headshot; bots award 10% of the normal kill reward. Weapon overrides and all quest goals, rewards, activity XP, the per-round cap, and respec cost are configurable in `rpg_config.json`.
 
 | Config key | Default | Purpose |
 | :--- | :---: | :--- |
-| `AssistXP`, `RoundWinXP`, `MvpXP` | 10, 10, 15 | Activity XP rewards |
-| `BombPlantXP`, `BombDefuseXP` | 10, 15 | Objective XP rewards |
-| `MaxBonusXPPerRound` | 30 | Combined activity XP cap per player per round |
+| `DefaultXP`, `HeadshotBonus`, `BotXpMultiplier` | 15, 5, 0.1 | Normal kill reward, headshot bonus, and bot reward multiplier |
+| `AssistXP`, `RoundWinXP`, `MvpXP` | 5, 5, 5 | Activity XP rewards |
+| `BombPlantXP`, `BombDefuseXP` | 5, 5 | Objective XP rewards |
+| `MaxBonusXPPerRound` | 10 | Combined activity XP cap per player per round |
 | `RespecXPCost` | 100 | XP cost to reset skill upgrades |
-| `DailyKillQuestTarget`, `DailyKillQuestXP` | 10, 50 | Daily player-kill goal and reward |
-| `DailyHeadshotQuestTarget`, `DailyHeadshotQuestXP` | 5, 75 | Daily headshot-kill goal and reward |
-| `WeeklyAssistQuestTarget`, `WeeklyAssistQuestXP` | 15, 150 | Weekly assist goal and reward |
-| `WeeklyWinQuestTarget`, `WeeklyWinQuestXP` | 5, 200 | Weekly round-win goal and reward |
+| `DailyKillQuestTarget`, `DailyKillQuestXP` | 10, 25 | Daily player-kill goal and reward |
+| `DailyHeadshotQuestTarget`, `DailyHeadshotQuestXP` | 5, 25 | Daily headshot-kill goal and reward |
+| `WeeklyAssistQuestTarget`, `WeeklyAssistQuestXP` | 15, 50 | Weekly assist goal and reward |
+| `WeeklyWinQuestTarget`, `WeeklyWinQuestXP` | 5, 50 | Weekly round-win goal and reward |
 
 ---
 

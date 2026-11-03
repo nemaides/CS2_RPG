@@ -20,14 +20,14 @@ public class RpgConfig
         // 76561198014792509
     };
 
-    public int DefaultXP { get; set; } = 25;
-    public int HeadshotBonus { get; set; } = 15;
-    public double BotXpMultiplier { get; set; } = 0.25;
+    public int DefaultXP { get; set; } = 15;
+    public int HeadshotBonus { get; set; } = 5;
+    public double BotXpMultiplier { get; set; } = 0.1;
     public Dictionary<string, int> WeaponXP { get; set; } = new(StringComparer.OrdinalIgnoreCase)
     {
-        { "knife", 130 },
-        { "awp", 25 },
-        { "deagle", 40 }
+        { "knife", 25 },
+        { "awp", 15 },
+        { "deagle", 20 }
     };
 
 
@@ -35,20 +35,20 @@ public class RpgConfig
 
     public Dictionary<string, double> UpgradeIncrements { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-    public int AssistXP { get; set; } = 10;
-    public int RoundWinXP { get; set; } = 10;
-    public int MvpXP { get; set; } = 15;
-    public int BombPlantXP { get; set; } = 10;
-    public int BombDefuseXP { get; set; } = 15;
-    public int MaxBonusXPPerRound { get; set; } = 30;
+    public int AssistXP { get; set; } = 5;
+    public int RoundWinXP { get; set; } = 5;
+    public int MvpXP { get; set; } = 5;
+    public int BombPlantXP { get; set; } = 5;
+    public int BombDefuseXP { get; set; } = 5;
+    public int MaxBonusXPPerRound { get; set; } = 10;
     public int RespecXPCost { get; set; } = 100;
 
     public int DailyKillQuestTarget { get; set; } = 10;
-    public int DailyKillQuestXP { get; set; } = 50;
+    public int DailyKillQuestXP { get; set; } = 25;
     public int DailyHeadshotQuestTarget { get; set; } = 5;
-    public int DailyHeadshotQuestXP { get; set; } = 75;
+    public int DailyHeadshotQuestXP { get; set; } = 25;
     public int WeeklyAssistQuestTarget { get; set; } = 15;
-    public int WeeklyAssistQuestXP { get; set; } = 150;
+    public int WeeklyAssistQuestXP { get; set; } = 50;
     public int WeeklyWinQuestTarget { get; set; } = 5;
-    public int WeeklyWinQuestXP { get; set; } = 200;
+    public int WeeklyWinQuestXP { get; set; } = 50;
 }
