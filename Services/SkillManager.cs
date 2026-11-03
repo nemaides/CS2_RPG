@@ -161,13 +161,57 @@ internal class ReflectionSkillWrapper : IRpgSkill
     {
         try
         {
-            _type.GetMethod(nameof(OnPlayerJump))?.Invoke(
-                (object)_instance,
-                new object[] { playerSlot, level, isGrounded, upgradeIncrement });
+            var method = _type.GetMethod(nameof(OnPlayerJump), new[]
+            {
+                typeof(int),
+                typeof(int),
+                typeof(bool),
+                typeof(double)
+            });
+            method?.Invoke((object)_instance, new object[] { playerSlot, level, isGrounded, upgradeIncrement });
         }
         catch (Exception ex)
         {
             SkillLogger.Log($"[EXECUTION ERROR] OnPlayerJump failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+        }
+    }
+
+    public void OnPlayerJump(CCSPlayerController player, int level, bool isGrounded, double upgradeIncrement)
+    {
+        try
+        {
+            var method = _type.GetMethod(nameof(OnPlayerJump), new[]
+            {
+                typeof(CCSPlayerController),
+                typeof(int),
+                typeof(bool),
+                typeof(double)
+            });
+
+            if (method != null)
+            {
+                method.Invoke((object)_instance, new object[] { player, level, isGrounded, upgradeIncrement });
+                return;
+            }
+
+            OnPlayerJump(player.Slot, level, isGrounded, upgradeIncrement);
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] OnPlayerJump failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+        }
+    }
+
+    public void OnPlayerGroundState(int playerSlot, bool isGrounded)
+    {
+        try
+        {
+            var method = _type.GetMethod(nameof(OnPlayerGroundState));
+            method?.Invoke((object)_instance, new object[] { playerSlot, isGrounded });
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] OnPlayerGroundState failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
         }
     }
 

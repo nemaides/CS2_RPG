@@ -21,6 +21,7 @@ public class CS2_RPG : BasePlugin
     public override string ModuleAuthor => "Nemaides";
 
     private readonly Dictionary<ulong, RpgPlayer> _rpgPlayers = new();
+    private readonly Dictionary<ulong, bool> _playerGrounded = new();
     private readonly SkillManager _skillManager = new();
     private SqliteConnection? _dbConnection;
     private RpgConfig _config = new();
@@ -133,6 +134,7 @@ public class CS2_RPG : BasePlugin
         SkillLogger.Log($"Total skills recognized by SkillManager: {_skillManager.LoadedSkills.Count}");
 
         RegisterListener<Listeners.OnPlayerButtonsChanged>(OnPlayerButtonsChanged);
+        RegisterListener<Listeners.OnTick>(OnPlayerTick);
 
         if (_config.MaxUpgradeLevels == null)
             _config.MaxUpgradeLevels = new(StringComparer.OrdinalIgnoreCase);
@@ -212,6 +214,7 @@ public class CS2_RPG : BasePlugin
     public override void Unload(bool hotReload)
     {
         RemoveListener<Listeners.OnPlayerButtonsChanged>(OnPlayerButtonsChanged);
+        RemoveListener<Listeners.OnTick>(OnPlayerTick);
         SkillLogger.Log("=== CS2 RPG Plugin Unloading ===");
         foreach (var rpgPlayer in _rpgPlayers.Values)
         {
@@ -339,7 +342,8 @@ public class CS2_RPG : BasePlugin
         else if (!_rpgPlayers.ContainsKey(steamId))
             _rpgPlayers[steamId] = new RpgPlayer(steamId, player.PlayerName);
 
-        player.PrintToChat($" \x04[RPG]\x01 Welcome! Type \x06/stats\x01 to view progress, \x06/rpg\x01 for upgrades or \x06/rpghelp\x01 to see skill descriptions.");
+        player.PrintToChat($" \x04[RPG]\x01 Welcome! Type \x06/stats\x01 to view progress, \x06/rpg\x01 for upgrades or \x06/rpghelp\x01 for skill descriptions.");
+        player.PrintToChat($" \x01Type \x06/rpg_commands\x01 to see all player commands.");
         return HookResult.Continue;
     }
 
@@ -351,6 +355,7 @@ public class CS2_RPG : BasePlugin
 
         ulong steamId = player.SteamID;
         _connectedPlayers.Remove(steamId);
+        _playerGrounded.Remove(steamId);
         _roundBonusXp.Remove(steamId);
         RpgCommandHandler.ForgetPlayer(steamId);
 
@@ -376,6 +381,10 @@ public class CS2_RPG : BasePlugin
             var targetPlayer = Utilities.GetPlayerFromSlot(slot);
             if (targetPlayer == null || !targetPlayer.IsValid || !targetPlayer.PawnIsAlive) return;
 
+            var pawn = targetPlayer.PlayerPawn?.Value;
+            if (pawn == null || !pawn.IsValid) return;
+            _playerGrounded[steamId] = pawn.GroundEntity.IsValid;
+
             if (_rpgPlayers.TryGetValue(steamId, out var rpgPlayer))
             {
                 foreach (var skill in _skillManager.LoadedSkills.Values)
@@ -400,8 +409,10 @@ public class CS2_RPG : BasePlugin
             return HookResult.Continue;
 
         var player = @event.Userid;
-        if (player == null || !player.IsValid || player.IsBot ||
-            !_rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+        if (player == null || !player.IsValid || player.IsBot)
+            return HookResult.Continue;
+
+        if (!_rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
             return HookResult.Continue;
 
         double durationMultiplier = 1.0;
@@ -413,6 +424,7 @@ public class CS2_RPG : BasePlugin
             double increment = _config.UpgradeIncrements.TryGetValue(skill.Id, out double configuredIncrement)
                 ? configuredIncrement
                 : skill.DefaultIncrement;
+
             double skillMultiplier = skill.GetBlindDurationMultiplier(level, increment);
             if (double.IsFinite(skillMultiplier))
             {
@@ -421,7 +433,34 @@ public class CS2_RPG : BasePlugin
         }
 
         durationMultiplier = Math.Clamp(durationMultiplier, 0.25, 1.0);
-        @event.BlindDuration = Math.Max(0.1f, @event.BlindDuration * (float)durationMultiplier);
+        float adjustedDuration = Math.Max(0.1f, @event.BlindDuration * (float)durationMultiplier);
+        @event.BlindDuration = adjustedDuration;
+
+        ulong steamId = player.SteamID;
+        int playerSlot = player.Slot;
+        AddTimer(0.05f, () =>
+        {
+            var currentPlayer = Utilities.GetPlayerFromSlot(playerSlot);
+            if (currentPlayer == null || !currentPlayer.IsValid || currentPlayer.SteamID != steamId)
+                return;
+
+            var pawn = currentPlayer.PlayerPawn?.Value;
+            if (pawn == null || !pawn.IsValid) return;
+
+            if (pawn.FlashDuration > adjustedDuration)
+            {
+                pawn.FlashDuration = adjustedDuration;
+                Utilities.SetStateChanged(pawn, "CCSPlayerPawnBase", "m_flFlashDuration");
+            }
+
+            if (pawn.BlindUntilTime > pawn.BlindStartTime)
+            {
+                float adjustedBlindUntil = pawn.BlindStartTime + adjustedDuration;
+                if (pawn.BlindUntilTime > adjustedBlindUntil)
+                    pawn.BlindUntilTime = adjustedBlindUntil;
+            }
+        });
+
         return HookResult.Continue;
     }
 
@@ -624,7 +663,9 @@ public class CS2_RPG : BasePlugin
         var pawn = player.PlayerPawn?.Value;
         if (pawn == null || !pawn.IsValid) return;
 
-        bool isGrounded = pawn.GroundEntity.IsValid;
+        bool isGrounded = _playerGrounded.TryGetValue(player.SteamID, out bool wasGrounded)
+            ? wasGrounded
+            : pawn.GroundEntity.IsValid;
         foreach (var skill in _skillManager.LoadedSkills.Values)
         {
             int level = rpgPlayer.GetSkillLevel(skill.Id);
@@ -633,7 +674,35 @@ public class CS2_RPG : BasePlugin
             double increment = _config.UpgradeIncrements.TryGetValue(skill.Id, out double configuredIncrement)
                 ? configuredIncrement
                 : skill.DefaultIncrement;
-            skill.OnPlayerJump(player.Slot, level, isGrounded, increment);
+            skill.OnPlayerJump(player, level, isGrounded, increment);
+        }
+    }
+
+    private void OnPlayerTick()
+    {
+        foreach (var player in Utilities.GetPlayers())
+        {
+            if (!player.IsValid || player.IsBot || !_rpgPlayers.ContainsKey(player.SteamID))
+                continue;
+
+            var pawn = player.PlayerPawn?.Value;
+            if (pawn == null || !pawn.IsValid || !player.PawnIsAlive)
+            {
+                _playerGrounded.Remove(player.SteamID);
+                continue;
+            }
+
+            bool isGrounded = pawn.GroundEntity.IsValid;
+            _playerGrounded[player.SteamID] = isGrounded;
+
+            if (!_rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+                continue;
+
+            foreach (var skill in _skillManager.LoadedSkills.Values)
+            {
+                if (rpgPlayer.GetSkillLevel(skill.Id) > 0)
+                    skill.OnPlayerGroundState(player.Slot, isGrounded);
+            }
         }
     }
 
@@ -651,6 +720,13 @@ public class CS2_RPG : BasePlugin
     {
         if (player == null || !player.IsValid) return;
         RpgCommandHandler.ShowStats(player, _rpgPlayers, _skillManager);
+    }
+
+    [ConsoleCommand("rpg_commands", "List player RPG commands")]
+    public void CmdRpgCommands(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null && !player.IsValid) return;
+        RpgCommandHandler.ShowPlayerCommands(player);
     }
 
     [ConsoleCommand("rpg_admin", "View RPG admin commands")]

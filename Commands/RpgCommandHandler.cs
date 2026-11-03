@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CS2_RPG.API;
 using CS2_RPG.Models;
 using CS2_RPG.Services;
@@ -28,6 +29,12 @@ public static class RpgCommandHandler
         if (parts.Length == 0) return false;
         string cmd = parts[0].ToLowerInvariant();
         string[] args = parts.Skip(1).ToArray();
+
+        if (cmd is "!rpg_commands" or "/rpg_commands")
+        {
+            ShowPlayerCommands(player);
+            return true;
+        }
 
         if ((cmd == "!rpg" || cmd == "/rpg") && args.Length > 0)
         {
@@ -127,6 +134,46 @@ public static class RpgCommandHandler
         }
 
         return false;
+    }
+
+    public static void ShowPlayerCommands(CCSPlayerController? player)
+    {
+        if (player != null && !player.IsValid) return;
+
+        string[] commands =
+        {
+            "\x04--- RPG Commands ---",
+            "\x06MENU",
+            "\x01/rpg \x07| \x01/rpg_menu \x07| \x01/menu \x01- Open upgrades",
+            "\x01/rpg_upgrade \x07| \x01/upgrade",
+            "\x06PLAYER INFO",
+            "\x01/stats \x07| \x01/rpg_stats \x01- View your stats",
+            "\x01/rpghelp \x07| \x01/rpg_help [skill] \x01- List skills or view details",
+            "\x06COMMUNITY",
+            "\x01/rpg top \x01- View the leaderboard",
+            "\x01/rpg profile <name> \x01- View a player's profile",
+            "\x01/quests \x07| \x01/rpg_quests \x01- View quest progress",
+            "\x06CHARACTER",
+            "\x01/prestige \x07| \x01/rpg_prestige [confirm] \x01- Prestige when eligible",
+            "\x01/respec \x07| \x01/rpg_respec [confirm] \x01- Reset upgrades for XP",
+            "\x01/title \x07| \x01/rpg_title [title] \x01- View or select a title",
+            "\x06HELP",
+            "\x01/rpg_commands \x01- Show this list",
+            "\x01Use \x06! \x01instead of \x06/ \x01in chat. Menu: \x06/1-/7 \x01upgrade, \x06/8-/9 \x01pages."
+        };
+
+        foreach (string command in commands)
+        {
+            if (player == null)
+                Server.PrintToConsole($"[RPG] {StripChatColors(command)}");
+            else
+                player.PrintToChat(command);
+        }
+    }
+
+    private static string StripChatColors(string text)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(text, @"[\x01-\x10]", string.Empty);
     }
 
     public static void ShowMenu(CCSPlayerController player, Dictionary<ulong, RpgPlayer> players, RpgConfig config, SkillManager skillManager)

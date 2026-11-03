@@ -12,7 +12,7 @@ public class DoubleJumpSkill : IRpgSkill
 
     private sealed class JumpState
     {
-        public bool JumpedFromGround { get; set; }
+        public bool FirstJumpSeen { get; set; }
         public bool UsedExtraJump { get; set; }
     }
 
@@ -34,10 +34,34 @@ public class DoubleJumpSkill : IRpgSkill
 
     public void OnPeriodicTick(int playerSlot, int level, double upgradeIncrement) { }
 
+    public void OnPlayerGroundState(int playerSlot, bool isGrounded)
+    {
+        if (!PlayerJumpStates.TryGetValue(playerSlot, out var state))
+        {
+            state = new JumpState();
+            PlayerJumpStates[playerSlot] = state;
+        }
+
+        if (isGrounded)
+        {
+            state.FirstJumpSeen = false;
+            state.UsedExtraJump = false;
+        }
+    }
+
     public void OnPlayerJump(int playerSlot, int level, bool isGrounded, double upgradeIncrement)
     {
         var player = Utilities.GetPlayerFromSlot(playerSlot);
-        if (player == null || !player.IsValid || !player.PawnIsAlive) return;
+        if (player == null || !player.IsValid) return;
+
+        OnPlayerJump(player, level, isGrounded, upgradeIncrement);
+    }
+
+    public void OnPlayerJump(CCSPlayerController player, int level, bool isGrounded, double upgradeIncrement)
+    {
+        int playerSlot = player.Slot;
+        if (!player.IsValid || !player.PawnIsAlive)
+            return;
 
         if (!PlayerJumpStates.TryGetValue(playerSlot, out var state))
         {
@@ -47,19 +71,57 @@ public class DoubleJumpSkill : IRpgSkill
 
         if (isGrounded)
         {
-            state.JumpedFromGround = true;
+            state.FirstJumpSeen = true;
             state.UsedExtraJump = false;
             return;
         }
 
-        if (!state.JumpedFromGround || state.UsedExtraJump) return;
+        if (!state.FirstJumpSeen)
+        {
+            state.FirstJumpSeen = true;
+            return;
+        }
+
+        if (state.UsedExtraJump)
+            return;
 
         var pawn = player.PlayerPawn?.Value;
-        if (pawn == null || !pawn.IsValid || pawn.AbsVelocity == null) return;
+        if (pawn == null || !pawn.IsValid)
+            return;
+
+        var velocity = pawn.Velocity;
+        if (velocity == null)
+            return;
 
         double increment = upgradeIncrement > 0 ? upgradeIncrement : DefaultIncrement;
         float bonusVelocity = (float)Math.Clamp(level * increment, 0, MaxBonusVelocity);
-        pawn.AbsVelocity.Z = BaseJumpVelocity + bonusVelocity;
+        float targetVelocity = BaseJumpVelocity + bonusVelocity;
+        velocity.Z = targetVelocity;
+        var absoluteVelocity = pawn.AbsVelocity;
+        absoluteVelocity.Z = targetVelocity;
         state.UsedExtraJump = true;
+
+        ulong steamId = player.SteamID;
+        Server.NextFrame(() =>
+        {
+            var currentPlayer = Utilities.GetPlayerFromSlot(playerSlot);
+            if (currentPlayer == null || !currentPlayer.IsValid || !currentPlayer.PawnIsAlive ||
+                currentPlayer.SteamID != steamId ||
+                !PlayerJumpStates.TryGetValue(playerSlot, out var currentState) ||
+                !ReferenceEquals(currentState, state))
+                return;
+
+            var currentPawn = currentPlayer.PlayerPawn?.Value;
+            if (currentPawn == null || !currentPawn.IsValid) return;
+
+            var currentVelocity = currentPawn.Velocity;
+            if (currentVelocity == null) return;
+
+            if (currentVelocity.Z < targetVelocity)
+                currentVelocity.Z = targetVelocity;
+            var currentAbsoluteVelocity = currentPawn.AbsVelocity;
+            if (currentAbsoluteVelocity.Z < targetVelocity)
+                currentAbsoluteVelocity.Z = targetVelocity;
+        });
     }
 }
