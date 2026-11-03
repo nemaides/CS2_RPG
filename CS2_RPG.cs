@@ -390,6 +390,55 @@ public class CS2_RPG : BasePlugin
         return HookResult.Continue;
     }
 
+    [GameEventHandler(HookMode.Pre)]
+    public HookResult OnPlayerBlind(EventPlayerBlind @event, GameEventInfo info)
+    {
+        if (@event.BlindDuration <= 0 || !float.IsFinite(@event.BlindDuration))
+            return HookResult.Continue;
+
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.IsBot ||
+            !_rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+            return HookResult.Continue;
+
+        double durationMultiplier = 1.0;
+        foreach (var skill in _skillManager.LoadedSkills.Values)
+        {
+            int level = rpgPlayer.GetSkillLevel(skill.Id);
+            if (level <= 0) continue;
+
+            double increment = _config.UpgradeIncrements.TryGetValue(skill.Id, out double configuredIncrement)
+                ? configuredIncrement
+                : skill.DefaultIncrement;
+            double skillMultiplier = skill.GetBlindDurationMultiplier(level, increment);
+            if (double.IsFinite(skillMultiplier))
+            {
+                durationMultiplier *= Math.Clamp(skillMultiplier, 0.25, 1.0);
+            }
+        }
+
+        durationMultiplier = Math.Clamp(durationMultiplier, 0.25, 1.0);
+        @event.BlindDuration = Math.Max(0.1f, @event.BlindDuration * (float)durationMultiplier);
+        return HookResult.Continue;
+    }
+
+    private int GetObjectiveXpBonus(RpgPlayer rpgPlayer)
+    {
+        int bonusXp = 0;
+        foreach (var skill in _skillManager.LoadedSkills.Values)
+        {
+            int level = rpgPlayer.GetSkillLevel(skill.Id);
+            if (level <= 0) continue;
+
+            double increment = _config.UpgradeIncrements.TryGetValue(skill.Id, out double configuredIncrement)
+                ? configuredIncrement
+                : skill.DefaultIncrement;
+            bonusXp += Math.Max(0, skill.GetObjectiveXpBonus(level, increment));
+        }
+
+        return bonusXp;
+    }
+
     [GameEventHandler]
     public HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
     {
@@ -444,6 +493,11 @@ public class CS2_RPG : BasePlugin
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
         _roundBonusXp.Clear();
+        foreach (var skill in _skillManager.LoadedSkills.Values)
+        {
+            skill.OnRoundStart();
+        }
+
         return HookResult.Continue;
     }
 
@@ -484,7 +538,7 @@ public class CS2_RPG : BasePlugin
         if (player != null && player.IsValid && !player.IsBot &&
             _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
         {
-            AwardActivityXP(player, rpgPlayer, _config.BombPlantXP, "bomb plant");
+            AwardActivityXP(player, rpgPlayer, _config.BombPlantXP + GetObjectiveXpBonus(rpgPlayer), "bomb plant");
         }
         return HookResult.Continue;
     }
@@ -496,7 +550,7 @@ public class CS2_RPG : BasePlugin
         if (player != null && player.IsValid && !player.IsBot &&
             _rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
         {
-            AwardActivityXP(player, rpgPlayer, _config.BombDefuseXP, "bomb defuse");
+            AwardActivityXP(player, rpgPlayer, _config.BombDefuseXP + GetObjectiveXpBonus(rpgPlayer), "bomb defuse");
         }
         return HookResult.Continue;
     }

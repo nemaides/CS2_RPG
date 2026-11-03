@@ -11,9 +11,9 @@ public class PoisonSmokeSkill : IRpgSkill
 {
     public string Id => "poison_smoke";
     public string DisplayName => "Poison Smoke";
-    public string Description => "Damages enemies standing inside your thrown smoke grenades over time.";
-    public int DefaultMaxLevel => 10;
-    public double DefaultIncrement => 10.0;
+    public string Description => "Damages any player standing inside your thrown smoke grenades over time.";
+    public int DefaultMaxLevel => 5;
+    public double DefaultIncrement => 2.0;
 
     private const float SMOKE_RADIUS_2D = 250.0f;
     private const float MAX_VERTICAL_OFFSET = 120.0f;
@@ -40,8 +40,10 @@ public class PoisonSmokeSkill : IRpgSkill
             var smokeEntities = Utilities.FindAllEntitiesByDesignerName<CSmokeGrenadeProjectile>("smokegrenade_projectile");
             if (smokeEntities == null) return;
 
-            double effectiveIncrement = upgradeIncrement <= 0 ? 10.0 : upgradeIncrement;
+            double effectiveIncrement = upgradeIncrement <= 0 ? DefaultIncrement : upgradeIncrement;
             int finalDamage = Math.Max(1, (int)Math.Round(level * effectiveIncrement));
+
+            var damagedTargets = new HashSet<int>();
 
             foreach (var smoke in smokeEntities)
             {
@@ -70,6 +72,7 @@ public class PoisonSmokeSkill : IRpgSkill
 
                     if (distance2D <= SMOKE_RADIUS_2D && dz <= MAX_VERTICAL_OFFSET)
                     {
+                        if (!damagedTargets.Add(targetController.Slot)) continue;
                         ApplySafeDamage(ownerController.Slot, targetController, targetPawn, finalDamage);
                     }
                 }

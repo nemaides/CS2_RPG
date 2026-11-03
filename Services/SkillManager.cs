@@ -156,4 +156,44 @@ internal class ReflectionSkillWrapper : IRpgSkill
             SkillLogger.Log($"[EXECUTION ERROR] OnPeriodicTick failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
         }
     }
+
+    public int GetObjectiveXpBonus(int level, double upgradeIncrement)
+    {
+        try
+        {
+            var method = _type.GetMethod(nameof(GetObjectiveXpBonus));
+            return method == null ? 0 : Convert.ToInt32(method.Invoke((object)_instance, new object[] { level, upgradeIncrement }));
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] GetObjectiveXpBonus failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+            return 0;
+        }
+    }
+
+    public double GetBlindDurationMultiplier(int level, double upgradeIncrement)
+    {
+        try
+        {
+            var method = _type.GetMethod(nameof(GetBlindDurationMultiplier));
+            return method == null ? 1.0 : Convert.ToDouble(method.Invoke((object)_instance, new object[] { level, upgradeIncrement }));
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] GetBlindDurationMultiplier failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+            return 1.0;
+        }
+    }
+
+    public void OnRoundStart()
+    {
+        try
+        {
+            _type.GetMethod(nameof(OnRoundStart))?.Invoke((object)_instance, null);
+        }
+        catch (Exception ex)
+        {
+            SkillLogger.Log($"[EXECUTION ERROR] OnRoundStart failed for {Id}: {ex.InnerException?.Message ?? ex.Message}");
+        }
+    }
 }

@@ -9,8 +9,8 @@ public class LifestealSkill : IRpgSkill
     public string Id => "lifesteal";
     public string DisplayName => "Lifesteal";
     public string Description => "Restores a portion of your health when you deal damage to enemies, allowing you to sustain yourself in combat.";
-    public int DefaultMaxLevel => 15;
-    public double DefaultIncrement => 2.0;
+    public int DefaultMaxLevel => 10;
+    public double DefaultIncrement => 1.0;
 
     public void OnPlayerSpawn(int playerSlot, int level, double upgradeIncrement)
     {

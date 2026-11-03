@@ -10,8 +10,8 @@ public class HealthSkill : IRpgSkill
     public string Id => "health";
     public string DisplayName => "Health Boost";
     public string Description => "Increases your maximum health when you spawn, making you more resilient in combat.";
-    public int DefaultMaxLevel => 20;
-    public double DefaultIncrement => 10.0;
+    public int DefaultMaxLevel => 5;
+    public double DefaultIncrement => 5.0;
 
     public void OnPlayerSpawn(int playerSlot, int level, double upgradeIncrement)
     {
