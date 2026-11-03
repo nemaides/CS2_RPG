@@ -33,6 +33,13 @@ public interface IRpgSkill
     /// <summary>Called when a player presses jump, if supported.</summary>
     void OnPlayerJump(int playerSlot, int level, bool isGrounded, double upgradeIncrement) { }
 
+    /// <summary>Called when a player presses jump, with the live controller available.</summary>
+    void OnPlayerJump(CCSPlayerController player, int level, bool isGrounded, double upgradeIncrement) =>
+        OnPlayerJump(player.Slot, level, isGrounded, upgradeIncrement);
+
+    /// <summary>Called each server tick with the player's current grounded state, if supported.</summary>
+    void OnPlayerGroundState(int playerSlot, bool isGrounded) { }
+
     /// <summary>Called when a player dies, if supported.</summary>
     void OnPlayerDeath(int playerSlot, int level, double upgradeIncrement) { }
 

@@ -39,6 +39,7 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 | Command | Description |
 | :--- | :--- |
 | **/rpg, /rpg_menu, /rpg_upgrade** | Opens the main RPG upgrade menu. |
+| **/rpg_commands** | Lists the available non-admin RPG chat commands. |
 | **/stats, /rpg_stats** | Displays your current RPG stats and level progress. |
 | **/rpghelp [skill]** | Lists all registered RPG skills or details a specific skill. |
 | **/rpg top**| Shows the top five players, ranked by prestige, level, then XP. |
