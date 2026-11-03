@@ -30,6 +30,12 @@ public interface IRpgSkill
     /// <summary>Called periodically on background support ticks (if applicable)</summary>
     void OnPeriodicTick(int playerSlot, int level, double upgradeIncrement);
 
+    /// <summary>Called when a player presses jump, if supported.</summary>
+    void OnPlayerJump(int playerSlot, int level, bool isGrounded, double upgradeIncrement) { }
+
+    /// <summary>Called when a player dies, if supported.</summary>
+    void OnPlayerDeath(int playerSlot, int level, double upgradeIncrement) { }
+
     /// <summary>Returns bonus XP for planting or defusing the bomb, if supported.</summary>
     int GetObjectiveXpBonus(int level, double upgradeIncrement) => 0;
 

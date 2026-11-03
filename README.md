@@ -16,6 +16,24 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 
 ---
 
+### Skills
+
+- **Ammo Resupply:** Chance to replenish ammunition for your active weapon.
+- **Clutch:** Gain a brief movement boost once per round when you are your team's last survivor.
+- **Double Jump:** Perform one extra jump while airborne after jumping from the ground.
+- **Flash Guard:** Reduce the duration of flash effects.
+- **Health Boost:** Increase your maximum health when you spawn.
+- **Lifesteal:** Restore health when you deal damage to enemies.
+- **Medic Aura:** Heal nearby teammates over time.
+- **Objective Specialist:** Earn bonus XP for planting or defusing the bomb.
+- **Poison Smoke:** Damage players standing in smoke grenades you threw.
+- **Recovery:** Slowly restore health after avoiding damage for a short time.
+- **Repulsion Blast:** Chance to knock back enemies when you hit them.
+- **Revenge Pop:** On death, knock back nearby enemies without dealing damage or creating smoke.
+- **Speed:** Increase your movement speed.
+
+---
+
 ### Commands Reference
 
 | Command | Description |

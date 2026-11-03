@@ -132,6 +132,8 @@ public class CS2_RPG : BasePlugin
         Console.WriteLine($"[CS2 RPG] Total skills recognized by SkillManager: {_skillManager.LoadedSkills.Count}");
         SkillLogger.Log($"Total skills recognized by SkillManager: {_skillManager.LoadedSkills.Count}");
 
+        RegisterListener<Listeners.OnPlayerButtonsChanged>(OnPlayerButtonsChanged);
+
         if (_config.MaxUpgradeLevels == null)
             _config.MaxUpgradeLevels = new(StringComparer.OrdinalIgnoreCase);
 
@@ -209,6 +211,7 @@ public class CS2_RPG : BasePlugin
 
     public override void Unload(bool hotReload)
     {
+        RemoveListener<Listeners.OnPlayerButtonsChanged>(OnPlayerButtonsChanged);
         SkillLogger.Log("=== CS2 RPG Plugin Unloading ===");
         foreach (var rpgPlayer in _rpgPlayers.Values)
         {
@@ -445,6 +448,21 @@ public class CS2_RPG : BasePlugin
         var attacker = @event.Attacker;
         var victim = @event.Userid;
 
+        if (victim != null && victim.IsValid && !victim.IsBot &&
+            _rpgPlayers.TryGetValue(victim.SteamID, out var rpgVictim))
+        {
+            foreach (var skill in _skillManager.LoadedSkills.Values)
+            {
+                int level = rpgVictim.GetSkillLevel(skill.Id);
+                if (level <= 0) continue;
+
+                double increment = _config.UpgradeIncrements.TryGetValue(skill.Id, out double configuredIncrement)
+                    ? configuredIncrement
+                    : skill.DefaultIncrement;
+                skill.OnPlayerDeath(victim.Slot, level, increment);
+            }
+        }
+
         if (attacker == null || !attacker.IsValid || attacker.IsBot || victim == null || attacker == victim)
             return HookResult.Continue;
 
@@ -595,6 +613,28 @@ public class CS2_RPG : BasePlugin
         }
 
         return HookResult.Continue;
+    }
+
+    private void OnPlayerButtonsChanged(CCSPlayerController player, PlayerButtons pressed, PlayerButtons released)
+    {
+        if (!pressed.HasFlag(PlayerButtons.Jump) || !player.IsValid || player.IsBot ||
+            !player.PawnIsAlive || !_rpgPlayers.TryGetValue(player.SteamID, out var rpgPlayer))
+            return;
+
+        var pawn = player.PlayerPawn?.Value;
+        if (pawn == null || !pawn.IsValid) return;
+
+        bool isGrounded = pawn.GroundEntity.IsValid;
+        foreach (var skill in _skillManager.LoadedSkills.Values)
+        {
+            int level = rpgPlayer.GetSkillLevel(skill.Id);
+            if (level <= 0) continue;
+
+            double increment = _config.UpgradeIncrements.TryGetValue(skill.Id, out double configuredIncrement)
+                ? configuredIncrement
+                : skill.DefaultIncrement;
+            skill.OnPlayerJump(player.Slot, level, isGrounded, increment);
+        }
     }
 
     [ConsoleCommand("rpg_rpg", "Open RPG Menu")]

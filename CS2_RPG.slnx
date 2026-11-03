@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="CS2_RPG.csproj" />
   <Project Path="CS2_RPG.Skill.Clutch/CS2_RPG.Skill.Clutch.csproj" />
+  <Project Path="CS2_RPG.Skill.DoubleJump/CS2_RPG.Skill.DoubleJump.csproj" />
   <Project Path="CS2_RPG.Skill.FlashGuard/CS2_RPG.Skill.FlashGuard.csproj" />
   <Project Path="CS2_RPG.Skill.Health/CS2_RPG.Skill.Health.csproj" />
   <Project Path="CS2_RPG.Skill.Knockback/CS2_RPG.Skill.Knockback.csproj" />
@@ -9,6 +10,7 @@
   <Project Path="CS2_RPG.Skill.ObjectiveSpecialist/CS2_RPG.Skill.ObjectiveSpecialist.csproj" />
   <Project Path="CS2_RPG.Skill.PoisonSmoke/CS2_RPG.Skill.PoisonSmoke.csproj" />
   <Project Path="CS2_RPG.Skill.Recovery/CS2_RPG.Skill.Recovery.csproj" />
+  <Project Path="CS2_RPG.Skill.RevengePop/CS2_RPG.Skill.RevengePop.csproj" />
   <Project Path="CS2_RPG.Skill.Resupply/CS2_RPG.Skill.Resupply.csproj" />
   <Project Path="CS2_RPG.Skill.Speed/CS2_RPG.Skill.Speed.csproj" />
 </Solution>
