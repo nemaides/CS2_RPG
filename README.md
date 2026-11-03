@@ -41,8 +41,8 @@ The framework features dynamic Assembly Load Context (ALC) skill loading, automa
 | **/rpg, /rpg_menu, /rpg_upgrade** | Opens the main RPG upgrade menu. |
 | **/stats, /rpg_stats** | Displays your current RPG stats and level progress. |
 | **/rpghelp [skill]** | Lists all registered RPG skills or details a specific skill. |
-| **Chat:** `/rpg top` · **Console:** `rpg_top` | Shows the top five players, ranked by prestige, level, then XP. |
-| **Chat:** `/rpg profile <name>` · **Console:** `rpg_profile <name>` | Shows a player's RPG profile. |
+| **/rpg top**| Shows the top five players, ranked by prestige, level, then XP. |
+| **/rpg profile `<name>`**| Shows a player's RPG profile. |
 | **/rpg_quests** | Shows daily and weekly quest progress (periods use UTC). |
 | **/rpg_prestige [confirm]** | Prestiges after every loaded skill reaches its configured maximum. Confirmation resets level, XP, points, and skill upgrades. |
 | **/rpg_respec [confirm]** | Resets skill upgrades, refunds spent points, and costs the configured XP amount. |
