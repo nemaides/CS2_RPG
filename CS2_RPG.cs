@@ -665,6 +665,60 @@ public class CS2_RPG : BasePlugin
     [ConsoleCommand("rpg_setlevel", "Set exact level for a player")]
     public void CmdSetLevel(CCSPlayerController? p, CommandInfo c) { AdminCommands.SetPlayerLevel(p, c, _config, _rpgPlayers, _dbConnection); }
 
+    [ConsoleCommand("rpg_skills", "List loaded RPG skills")]
+    public void CmdSkills(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null)
+        {
+            if (!player.IsValid) return;
+            if (!_config.AdminSteamIds.Contains(player.SteamID))
+            {
+                player.PrintToChat(" \x02[RPG]\x01 You are not authorized to use admin commands.");
+                return;
+            }
+        }
+
+        if (command.ArgCount < 2 || !command.GetArg(1).Equals("list", StringComparison.OrdinalIgnoreCase))
+        {
+            if (player == null)
+                Server.PrintToConsole("[RPG] Usage: rpg_skills list");
+            else
+                player.PrintToChat(" \x04[RPG]\x01 Usage: /rpg_skills list");
+            return;
+        }
+
+        var skills = _skillManager.LoadedSkills.Values
+            .OrderBy(skill => skill.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (skills.Length == 0)
+        {
+            if (player == null)
+                Server.PrintToConsole("[RPG] No skills are currently loaded.");
+            else
+                player.PrintToChat(" \x04[RPG]\x01 No skills are currently loaded.");
+            return;
+        }
+
+        if (player == null)
+            Server.PrintToConsole($"[RPG] Loaded skills ({skills.Length}):");
+        else
+            player.PrintToChat($" \x04[RPG]\x01 Loaded skills ({skills.Length}):");
+
+        foreach (var skill in skills)
+        {
+            int maxLevel = _config.MaxUpgradeLevels.TryGetValue(skill.Id, out int configuredMaxLevel)
+                ? configuredMaxLevel
+                : skill.DefaultMaxLevel;
+            string entry = $"{skill.DisplayName} (ID: {skill.Id}, Max level: {maxLevel})";
+
+            if (player == null)
+                Server.PrintToConsole($" - {entry}");
+            else
+                player.PrintToChat($" \x01- \x06{entry}");
+        }
+    }
+
     [ConsoleCommand("rpg_help", "View RPG skill descriptions")]
     [ConsoleCommand("rpghelp", "View RPG skill descriptions")]
     public void CmdRpgHelp(CCSPlayerController? player, CommandInfo command)
